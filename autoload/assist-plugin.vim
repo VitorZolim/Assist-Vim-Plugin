@@ -48,3 +48,5 @@ function! CustomizedSearch()
 endfunction
 
 nnoremap / :call CustomizedSearch()<CR>
+
+"A função acima reconhece o comando '/' do VIM, assim ele abre uma barra lateral com o guia interativo. Ainda não foi feito o sistema de busca."
