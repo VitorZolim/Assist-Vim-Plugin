@@ -81,13 +81,11 @@ endfunction
 
 " Monta as linhas de texto que serão exibidas no popup ou nas mensagens.
 function! s:BuildSearchMessage(word, found_lines) abort
-    " strtrans() torna caracteres especiais legíveis sem mudar o termo buscado.
+    " Removemos o título em texto rígido e deixamos o corpo mais limpo.
     let l:message = [
-                \ ' Search Results ',
-                \ '',
                 \ ' Query: "' . strtrans(a:word) . '"',
-                \ '',
                 \ ' Matches: ' . len(a:found_lines),
+                \ '',
                 \ ]
 
     " Quando não há correspondências, finaliza a mensagem com um aviso claro.
@@ -109,6 +107,9 @@ endfunction
 function! s:BuildSearchPopupOptions() abort
     let l:options = {}
 
+    " Título embutido na borda do popup, separando visualmente do conteúdo.
+    let l:options.title = ' Search Results '
+
     " Ancora o popup no canto superior direito da área de edição.
     let l:options.line = 1
     let l:options.col = &columns
@@ -127,6 +128,13 @@ function! s:BuildSearchPopupOptions() abort
 
     " Desenha uma borda simples ao redor da janela lateral.
     let l:options.border = [1, 1, 1, 1]
+    
+    " Melhoria Visual: Usa cores normais e uma borda discreta em vez do rosa padrão.
+    let l:options.highlight = 'Normal'
+    let l:options.borderhighlight = ['Comment']
+    
+    " Melhoria Visual: Usa linhas contínuas para desenhar as bordas (mais elegante).
+    let l:options.borderchars = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
 
     " Exibe uma barra de rolagem se as linhas ultrapassarem a altura.
     let l:options.scrollbar = 1
@@ -151,6 +159,12 @@ function! s:ShowSearchMessage(word, message) abort
     " Uma nova busca substitui visualmente o resultado da busca anterior.
     call s:CloseSearchPopup()
 
+    " MELHORIA DE DESTAQUE: O Vim usa nativamente o grupo 'PopupSelected' para 
+    " a linha selecionada em popups. Forçamos a ligação desse grupo com o 'WildMenu', 
+    " que é o grupo de altíssimo contraste do Vim usado para seleções de menus,
+    " garantindo que a linha atual salte aos olhos (fundo forte em vez de cinza claro).
+    highlight! link PopupSelected WildMenu
+
     " Alguns builds do Vim não foram compilados com suporte a janelas popup.
     if !exists('*popup_create')
         echohl WarningMsg
@@ -168,7 +182,8 @@ function! s:ShowSearchMessage(word, message) abort
         let s:search_popup_id = popup_create(a:message, s:BuildSearchPopupOptions())
         
         " Destaca (highlight) a palavra buscada no arquivo principal (janela atual).
-        let l:pattern = '\V' . escape(a:word, '\')
+        " O \c foi adicionado ao padrão para ignorar maiúsculas/minúsculas no destaque.
+        let l:pattern = '\c\V' . escape(a:word, '\')
         let s:search_match_id = matchadd('Search', l:pattern)
     catch /^Vim\%((\a\+)\)\=:E/
         let s:search_popup_id = 0
@@ -205,11 +220,16 @@ function! CustomizedSearch() abort
         return
     endif
 
+    " Converte o termo de busca para minúsculo uma única vez (performance)
+    let l:word_lower = tolower(l:word)
+
     " Percorre todas as linhas existentes no buffer atual, da primeira à última.
     for l:line_number in range(1, line('$'))
         let l:line_content = getline(l:line_number)
 
-        if stridx(l:line_content, l:word) >= 0
+        " Converte o conteúdo da linha para minúsculo no momento da verificação
+        " Isso garante a funcionalidade Case-Insensitive preservando o stridx
+        if stridx(tolower(l:line_content), l:word_lower) >= 0
             call add(l:found_lines, l:line_number)
         endif
     endfor
