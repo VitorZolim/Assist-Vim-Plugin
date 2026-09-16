@@ -12,6 +12,11 @@ let g:loaded_assist_plugin_search = 1
 let s:search_popup_id = 0
 let s:search_match_id = 0
 
+" Estado da pesquisa interna do popup.
+let s:popup_search_mode = 0
+let s:popup_search_query = ''
+let s:popup_search_message = []
+
 " Fecha o popup de resultado e limpa o grifo do arquivo.
 function! s:CloseSearchPopup() abort
     " Só tenta fechar o popup se houver um ID válido.
@@ -25,6 +30,11 @@ function! s:CloseSearchPopup() abort
         silent! call matchdelete(s:search_match_id)
     endif
     let s:search_match_id = 0
+
+    " Limpa o estado da pesquisa interna.
+    let s:popup_search_mode = 0
+    let s:popup_search_query = ''
+    let s:popup_search_message = []
 endfunction
 
 " Função global que permite fechar o popup executando :call ClosePopupSearch()
@@ -32,8 +42,153 @@ function! ClosePopupSearch() abort
     call s:CloseSearchPopup()
 endfunction
 
+" Inicia a pesquisa dentro do popup atual.
+function! SearchInsidePopup() abort
+    " Só executa se houver um popup válido.
+    if s:search_popup_id <= 0
+        return
+    endif
+
+    " Obtém o buffer utilizado pelo popup.
+    let l:popup_buffer = winbufnr(s:search_popup_id)
+
+    if l:popup_buffer <= 0
+        return
+    endif
+
+    " Guarda somente o conteúdo original dos resultados.
+    let s:popup_search_message = getbufline(l:popup_buffer, 3, '$')
+
+    " Ativa o modo de pesquisa interna.
+    let s:popup_search_mode = 1
+    let s:popup_search_query = ''
+
+    " Atualiza o campo de pesquisa no topo do popup.
+    call s:UpdatePopupSearchField()
+endfunction
+
+" Atualiza o campo de pesquisa no topo do popup.
+function! s:UpdatePopupSearchField() abort
+    if s:search_popup_id <= 0
+        return
+    endif
+
+    " O texto explica ao usuário o propósito do campo.
+    let l:search_field = ' Search: inserir palavra'
+
+    if s:popup_search_mode
+        let l:search_field = ' Search: ' . s:popup_search_query
+    endif
+
+    " Reconstrói o conteúdo sem alterar o buffer principal.
+    call popup_settext(s:search_popup_id, [
+                \ l:search_field,
+                \ '',
+                \ ] + s:popup_search_message)
+
+    " Mantém o cursor visual no campo de pesquisa.
+    call win_execute(s:search_popup_id, 'cursor(1, ' .
+                \ (strlen(l:search_field) + 1) . ')')
+endfunction
+
+" Executa a pesquisa dentro dos resultados exibidos no popup.
+function! s:ExecutePopupSearch() abort
+    if s:search_popup_id <= 0
+        return
+    endif
+
+    let l:query = tolower(s:popup_search_query)
+    let l:filtered = []
+
+    " Pesquisa literalmente dentro de cada linha do popup.
+    " stridx() permite caracteres especiais sem tratá-los como regex.
+    for l:line in s:popup_search_message
+        if stridx(tolower(l:line), l:query) >= 0
+            call add(l:filtered, l:line)
+        endif
+    endfor
+
+    " Caso não encontre nada, informa o usuário dentro do próprio popup.
+    if empty(l:filtered)
+        let l:filtered = [' No matching text in search results.']
+    endif
+
+    " Mantém o campo de pesquisa no topo e substitui apenas os resultados.
+    call popup_settext(s:search_popup_id, [
+                \ ' Search: ' . s:popup_search_query,
+                \ '',
+                \ ] + l:filtered)
+
+    " Posiciona o cursor no campo de pesquisa.
+    call win_execute(s:search_popup_id, 'cursor(1, ' .
+                \ (strlen(' Search: ') + strlen(s:popup_search_query) + 1) . ')')
+endfunction
+
 " Processa teclas recebidas pelo popup de resultados.
 function! s:SearchPopupFilter(popup_id, key) abort
+    " Quando a pesquisa interna está ativa, as teclas são direcionadas
+    " para o campo de pesquisa em vez de executar as funções do popup.
+    if s:popup_search_mode
+        " Enter executa a pesquisa.
+        if a:key ==# "\<CR>"
+            call s:ExecutePopupSearch()
+            return 1
+        endif
+
+        " Esc cancela a pesquisa interna e restaura os resultados originais.
+        if a:key ==# "\<Esc>"
+            let s:popup_search_mode = 0
+            let s:popup_search_query = ''
+
+            call s:UpdatePopupSearchField()
+            return 1
+        endif
+
+        " Backspace remove o último caractere digitado.
+        if a:key ==# "\<BS>" || a:key ==# "\<Del>"
+            if !empty(s:popup_search_query)
+                let s:popup_search_query =
+                            \ strpart(
+                            \ s:popup_search_query,
+                            \ 0,
+                            \ strlen(s:popup_search_query) - 1)
+
+                call s:UpdatePopupSearchField()
+            endif
+
+            return 1
+        endif
+
+        " Ctrl+U limpa o campo de pesquisa.
+        if a:key ==# "\<C-u>"
+            let s:popup_search_query = ''
+            call s:UpdatePopupSearchField()
+            return 1
+        endif
+
+        " Ctrl+G continua funcionando mesmo durante a pesquisa.
+        if a:key ==# "\<C-g>"
+            let s:popup_search_mode = 0
+            return s:SearchPopupFilter(a:popup_id, a:key)
+        endif
+
+        " Aceita caracteres digitados pelo usuário literalmente.
+        " Caracteres especiais não são tratados como expressões regulares.
+        if strlen(a:key) > 0
+            let s:popup_search_query .= a:key
+            call s:UpdatePopupSearchField()
+            return 1
+        endif
+
+        return 1
+    endif
+
+    " Pressionar / dentro do popup inicia a pesquisa interna.
+    if a:key ==# '/'
+        call SearchInsidePopup()
+        return 1
+    endif
+
     " Esc e q fecham somente a janela de resultados, sem alterar o buffer.
     if a:key ==# "\<Esc>" || a:key ==# 'q'
         call s:CloseSearchPopup()
@@ -56,7 +211,7 @@ function! s:SearchPopupFilter(popup_id, key) abort
     if a:key ==# "\<C-g>"
         " 1. Obtém o número da linha selecionada DENTRO do popup
         let l:popup_line_nr = str2nr(trim(win_execute(a:popup_id, 'echo line(".")')))
-        
+
         " 2. Pega o conteúdo de texto dessa linha no popup
         let l:popup_line_text = getbufline(winbufnr(a:popup_id), l:popup_line_nr)[0]
 
@@ -67,11 +222,11 @@ function! s:SearchPopupFilter(popup_id, key) abort
         if !empty(l:target_line)
             " Move o cursor para a linha extraída (1 = primeira coluna)
             call cursor(str2nr(l:target_line), 1)
-            
+
             " Centraliza a tela na nova posição (boa prática de usabilidade)
             normal! zz
         endif
-        
+
         return 1
     endif
 
@@ -128,17 +283,17 @@ function! s:BuildSearchPopupOptions() abort
 
     " Desenha uma borda simples ao redor da janela lateral.
     let l:options.border = [1, 1, 1, 1]
-    
-    " Melhoria Visual: Usa cores normais e uma borda discreta em vez do rosa padrão.
+
+    " Melhoria Visual: Usa cores normais e uma borda discreta.
     let l:options.highlight = 'Normal'
     let l:options.borderhighlight = ['Comment']
-    
-    " Melhoria Visual: Usa linhas contínuas para desenhar as bordas (mais elegante).
+
+    " Melhoria Visual: Usa linhas contínuas para desenhar as bordas.
     let l:options.borderchars = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
 
     " Exibe uma barra de rolagem se as linhas ultrapassarem a altura.
     let l:options.scrollbar = 1
-    
+
     " Ativa o destaque da linha atual selecionada no popup.
     let l:options.cursorline = 1
 
@@ -159,10 +314,7 @@ function! s:ShowSearchMessage(word, message) abort
     " Uma nova busca substitui visualmente o resultado da busca anterior.
     call s:CloseSearchPopup()
 
-    " MELHORIA DE DESTAQUE: O Vim usa nativamente o grupo 'PopupSelected' para 
-    " a linha selecionada em popups. Forçamos a ligação desse grupo com o 'WildMenu', 
-    " que é o grupo de altíssimo contraste do Vim usado para seleções de menus,
-    " garantindo que a linha atual salte aos olhos (fundo forte em vez de cinza claro).
+    " MELHORIA DE DESTAQUE: O Vim usa nativamente o grupo 'PopupSelected'.
     highlight! link PopupSelected WildMenu
 
     " Alguns builds do Vim não foram compilados com suporte a janelas popup.
@@ -179,10 +331,19 @@ function! s:ShowSearchMessage(word, message) abort
 
     " A criação pode falhar por configuração do Vim ou limitação do terminal.
     try
-        let s:search_popup_id = popup_create(a:message, s:BuildSearchPopupOptions())
-        
-        " Destaca (highlight) a palavra buscada no arquivo principal (janela atual).
-        " O \c foi adicionado ao padrão para ignorar maiúsculas/minúsculas no destaque.
+        " Guarda o conteúdo original para a pesquisa interna.
+        let s:popup_search_message = copy(a:message)
+
+        " Adiciona o campo de pesquisa na parte superior do popup.
+        let l:popup_message = [
+                    \ ' Search: inserir palavra',
+                    \ '',
+                    \ ] + a:message
+
+        let s:search_popup_id =
+                    \ popup_create(l:popup_message, s:BuildSearchPopupOptions())
+
+        " Destaca a palavra buscada no arquivo principal.
         let l:pattern = '\c\V' . escape(a:word, '\')
         let s:search_match_id = matchadd('Search', l:pattern)
     catch /^Vim\%((\a\+)\)\=:E/
@@ -216,26 +377,29 @@ function! CustomizedSearch() abort
 
     " Um buffer novo/vazio aparece no Vim como uma linha vazia.
     if line('$') == 1 && getline(1) ==# ''
-        call s:ShowSearchMessage(l:word, s:BuildSearchMessage(l:word, l:found_lines))
+        call s:ShowSearchMessage(
+                    \ l:word,
+                    \ s:BuildSearchMessage(l:word, l:found_lines))
         return
     endif
 
-    " Converte o termo de busca para minúsculo uma única vez (performance)
+    " Converte o termo de busca para minúsculo uma única vez.
     let l:word_lower = tolower(l:word)
 
-    " Percorre todas as linhas existentes no buffer atual, da primeira à última.
+    " Percorre todas as linhas existentes no buffer atual.
     for l:line_number in range(1, line('$'))
         let l:line_content = getline(l:line_number)
 
-        " Converte o conteúdo da linha para minúsculo no momento da verificação
-        " Isso garante a funcionalidade Case-Insensitive preservando o stridx
+        " Converte o conteúdo da linha para minúsculo no momento da verificação.
         if stridx(tolower(l:line_content), l:word_lower) >= 0
             call add(l:found_lines, l:line_number)
         endif
     endfor
 
     " Constrói e apresenta a lista final de resultados ao usuário.
-    call s:ShowSearchMessage(l:word, s:BuildSearchMessage(l:word, l:found_lines))
+    call s:ShowSearchMessage(
+                \ l:word,
+                \ s:BuildSearchMessage(l:word, l:found_lines))
 endfunction
 
 " Substitui / no modo normal pela busca personalizada, sem ecoar o comando.
