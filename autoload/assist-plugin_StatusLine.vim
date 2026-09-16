@@ -15,7 +15,8 @@ function! AccessibilityGetVimMode()
         return 'NORMAL'
     elseif l:m ==# 'i'
         return 'INSERT'
-    elseif l:m ==# 'R'
+    " Modificado: Agora captura tanto 'R' (Replace) quanto 'r' (hit-enter / single replace)
+    elseif l:m ==# 'R' || l:m ==# 'r' || l:m ==# 'Rv'
         return 'REPLACE'
     elseif l:m ==# 'v' || l:m ==# 'V' || l:m ==# "\<C-v>"
         return 'VISUAL'
@@ -26,7 +27,7 @@ function! AccessibilityGetVimMode()
     endif
 endfunction
 
-" 2. Função para desenhar o Popup de Acessibilidade (estilo nano)
+" 2. Função para desenhar o Popup de Acessibilidade responsivo
 function! s:DrawNanoPopup()
     " Verifica se o Vim possui suporte a popups (Vim 8.2+)
     if !has('popupwin')
@@ -36,37 +37,76 @@ function! s:DrawNanoPopup()
         return
     endif
 
-    " Se o popup já existir, fecha-o antes de recriar (útil para redimensionamento)
+    " Se o popup já existir, fecha-o antes de recriar
     if s:nano_popup_id != -1
         call popup_close(s:nano_popup_id)
     endif
 
-    " Grade minimalista, idêntica ao padrão nano com colunas retas e diretas (3 linhas)
-    let l:content = [
-        \ '  <Esc> Normal       i Insert        v Visual       : Command',
-        \ '  :w    Save         a Append        o New line     :help Help',
-        \ '  :q    Quit         :e Edit/Open    :! Ext cmd     R Replace'
-        \ ]
+    " --- LÓGICA DE RESPONSIVIDADE ---
+    let l:width = &columns
+    if l:width >= 90
+        " Padrão / Tela Larga: 6 colunas (Layout 2x6 solicitado)
+        let l:content = [
+            \ '  <Esc> Normal     i Insert       v Visual       R Replace      a Append       o New line',
+            \ '  :     Command    :help Help     :w Save        :q Quit        :e Edit/Open   :! Ext cmd'
+            \ ]
+        let l:popup_content_height = 2
+    elseif l:width >= 70
+        " Tela Média-Grande: 4 colunas
+        let l:content = [
+            \ '  <Esc> Normal       i Insert        v Visual       R Replace',
+            \ '  a     Append       o New line      : Command      :help Help',
+            \ '  :w    Save         :q Quit         :e Edit/Open   :! Ext cmd'
+            \ ]
+        let l:popup_content_height = 3
+    elseif l:width >= 55
+        " Tela Média: 3 colunas
+        let l:content = [
+            \ '  <Esc> Normal     i Insert      v Visual',
+            \ '  R     Replace    a Append      o New line',
+            \ '  :     Command    :help Help    :w Save',
+            \ '  :q    Quit       :e Edit/Open  :! Ext cmd'
+            \ ]
+        let l:popup_content_height = 4
+    else
+        " Tela Estreita: 2 colunas
+        let l:content = [
+            \ '  <Esc> Normal     i Insert',
+            \ '  v     Visual     R Replace',
+            \ '  a     Append     o New line',
+            \ '  :     Command    :help Help',
+            \ '  :w    Save       :q Quit',
+            \ '  :e    Edit/Open  :! Ext cmd'
+            \ ]
+        let l:popup_content_height = 6
+    endif
 
-    " Cria o popup. O cálculo '&lines - 3' garante que o popup desça mais, 
-    " deixando exatamente o último espaço da tela para ver os comandos digitados.
+    " --- CÁLCULO DE ESPAÇO E POSIÇÃO ---
+    let l:needed_cmdheight = l:popup_content_height + 3
+    if &cmdheight != l:needed_cmdheight
+        let &cmdheight = l:needed_cmdheight
+    endif
+
+    " --- ESTILIZAÇÃO DO POPUP ---
+    highlight default NanoBorder ctermfg=Cyan guifg=#00FFFF
+    highlight default NanoShortcut ctermfg=0 ctermbg=7 guifg=#000000 guibg=#ffffff
+
     let s:nano_popup_id = popup_create(l:content, #{
-        \ line: &lines - 3,
+        \ line: &lines - &cmdheight + 2,
         \ col: 1,
-        \ minwidth: &columns,
-        \ maxwidth: &columns,
+        \ minwidth: &columns - 2,
+        \ maxwidth: &columns - 2,
         \ wrap: 0,
         \ mapping: 0,
         \ zindex: 50,
-        \ highlight: 'Normal'
+        \ highlight: 'Normal',
+        \ border: [1, 1, 1, 1],
+        \ borderchars: ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
+        \ borderhighlight: ['NanoBorder']
         \ })
 
-    " --- ESTILIZAÇÃO NANO ---
-    " Cria um Highlight group para inverter as cores (texto preto, fundo branco)
-    highlight default NanoShortcut ctermfg=0 ctermbg=7 guifg=#000000 guibg=#ffffff
-    
-    " Aplica a sintaxe apenas dentro do buffer do popup para destacar os atalhos
-    call win_execute(s:nano_popup_id, 'syntax match NanoShortcut /\(<Esc>\|:[a-z!]\+\|\s\zs[iavoVR]\ze\s\)/')
+    " Aplica o highlight (Modificado para :[a-z!]* permitindo que o ':' isolado seja grifado)
+    call win_execute(s:nano_popup_id, 'syntax match NanoShortcut /\(<Esc>\|:[a-z!]*\|\s\zs[iavoVR]\ze\s\+\)/')
 endfunction
 
 " 3. Comando de Ativação
@@ -75,31 +115,26 @@ function! s:EnableAccessibilityUI()
     let s:old_cmdheight = &cmdheight
     let s:old_statusline = &statusline
     let s:old_laststatus = &laststatus
-
-    " Ajuste para 5, mantendo um espaço bom na base para o popup e o input
-    set cmdheight=5
     set laststatus=2
 
-    " Monta a StatusLine isolando o Modo à esquerda e o resto à direita
+    " Monta a StatusLine (Mantida intacta)
     let l:stl = ''
-    let l:stl .= ' [%{AccessibilityGetVimMode()}] ' " Modo atual na extrema ESQUERDA
-    let l:stl .= '%='                               " Empurra TODO O RESTO para a DIREITA
-    let l:stl .= 'Line: %l/%L '                     " Linha atual / Total de linhas
-    let l:stl .= '| Col: %c '                       " Coluna atual
-    let l:stl .= '| %p%% '                          " Porcentagem atual do arquivo
-    let l:stl .= '| File: %t %m %r '                " Nome do arquivo por último
-
+    let l:stl .= ' [%{AccessibilityGetVimMode()}] ' 
+    let l:stl .= '%='                               
+    let l:stl .= 'Line: %l/%L '                     
+    let l:stl .= '| Col: %c '                       
+    let l:stl .= '| %p%% '                          
+    let l:stl .= '| File: %t %m %r '                
     let &statusline = l:stl
 
-    " Desenha o popup pela primeira vez
+    " Desenha o popup
     call s:DrawNanoPopup()
 
-    " Configura autocommands para o comportamento responsivo do popup
+    " Configura autocommands (Restaurado o comportamento anterior para o Cmdline)
     augroup AccessibilityUIGroup
         autocmd!
-        " Redesenha o popup ao redimensionar a janela do terminal
         autocmd VimResized * call s:DrawNanoPopup()
-        " Esconde o popup ao entrar no modo de comando
+        " Esconde o popup ao entrar no modo de comando para liberar a visualização
         autocmd CmdlineEnter * if s:nano_popup_id != -1 | call popup_hide(s:nano_popup_id) | endif
         autocmd CmdlineLeave * if s:nano_popup_id != -1 | call popup_show(s:nano_popup_id) | endif
     augroup END
