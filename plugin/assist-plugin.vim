@@ -4,6 +4,7 @@ if exists('g:loaded_assist_plugin')
 endif
 let g:loaded_assist_plugin = 1
 
-" Carrega o script principal em autoload/, que define as funções
-" de busca (CustomizedSearch, ShowSearchMessage etc.) e o mapeamento do "/".
-runtime! autoload/assist-plugin.vim
+" Carrega todos os scripts dentro de autoload/, em qualquer subpasta
+" (autoload/customized-search/, autoload/keyboard-shortcuts/, etc.),
+" sem precisar listar cada arquivo aqui manualmente.
+runtime! autoload/**/*.vim
