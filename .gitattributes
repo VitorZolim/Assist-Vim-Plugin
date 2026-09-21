@@ -1,0 +1,4 @@
+# Garante que os arquivos do plugin usem sempre LF, independente do
+# core.autocrlf configurado em cada máquina (evita o bug de continuação
+# de linha com "\" no autoload/, que só aparece com CRLF em alguns Vims).
+*.vim text eol=lf
