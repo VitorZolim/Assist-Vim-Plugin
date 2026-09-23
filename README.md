@@ -1,71 +1,71 @@
 # ♿ Vim Accessibility Plugin (assist-plugin)
 
-> **Projeto Integrador II (PI-II) — Open4Community**  
-> **FATEC Ribeirão Preto** — Curso Superior de Tecnologia em Análise e Desenvolvimento de Sistemas  
-> **Tema:** Acessibilidade e Redução de Carga Cognitiva no Editor Vim
+> **Integrative Project II (PI-II) — Open4Community**  
+> **FATEC Ribeirão Preto** — Higher Technology Degree in Systems Analysis and Development  
+> **Topic:** Accessibility and Cognitive Load Reduction in the Vim Editor
 
 ---
 
-## 📌 Sobre o Projeto
+## 📌 About the Project
 
-O **Vim Accessibility Plugin** é uma extensão desenvolvida em **Vim Script** focada em aprimorar a usabilidade, acessibilidade e inclusão dentro do editor de texto Vim. 
+The **Vim Accessibility Plugin** is an extension written in **Vim Script** designed to improve usability, accessibility, and inclusivity within the Vim text editor.
 
-Historicamente, o Vim é conhecido por sua curva de aprendizado íngreme e por interfaces modais que exigem alta retenção de atalhos e sintaxes complexas (como expressões regulares). Este projeto tem como propósito reduzir as barreiras de entrada para usuários iniciantes, pessoas neurodivergentes e profissionais com necessidades de apoio à memória operacional ou orientação contextual, alinhando-se aos princípios universais de acessibilidade digital.
-
----
-
-## ✨ Principais Funcionalidades
-
-### 1. 🔍 Busca Literal Assistida com Janela Flutuante (`assist-plugin.vim`)
-Substitui a busca padrão por uma experiência intuitiva em popup lateral sem interferir na integridade do arquivo original:
-* **Busca Literal Direta:** Remapeia o atalho `/` para efetuar buscas literais automáticas, sem exigir conhecimento prévio ou escape manual de caracteres especiais e Regex.
-* **Painel Lateral em Popup:** Exibe as correspondências agrupadas por linha em uma janela flutuante no canto superior direito (`topright`) com moldura visual e barra de rolagem.
-* **Filtro Interno:** Permite pressionar `/` dentro da própria janela flutuante para refinar os resultados exibidos.
-* **Salto Rápido e Centralização:** Atalho `<Ctrl+g>` pula instantaneamente para a linha destacada no popup e centraliza o cursor na tela (`zz`).
-* **Fallback Automático:** Caso o ambiente do terminal ou versão do Vim não possua suporte a popups (`popupwin`), os resultados são exibidos com segurança via mensagens do próprio editor.
+Historically, Vim is known for its steep learning curve and modal interfaces that demand high shortcut retention and complex syntax handling (such as regular expressions). This project aims to lower entry barriers for beginners, neurodivergent users, and individuals who require cognitive or working-memory support, aligning with universal digital accessibility principles.
 
 ---
 
-### 2. 🧭 Barra de Status e Guia Visual Adaptativo (`assist-plugin_StatusLine.vim`)
-Inspirado na facilidade ergonômica de editores de terminal como o GNU Nano:
-* **Identificação Explícita do Modo de Operação:** Exibe na `statusline` o modo ativo de forma clara e legível (`[NORMAL]`, `[INSERT]`, `[VISUAL]`, `[REPLACE]`, `[COMMAND]`), evitando desorientações contextuais.
-* **Guia Visual de Teclas Essenciais:** Apresenta uma régua inferior com os comandos mais utilizados para manipulação de arquivos, navegação e ajuda.
-* **Layout Responsivo:** A quantidade de colunas do popup adapta-se automaticamente à largura da janela (`&columns`):
-  * **≥ 90 colunas:** Matriz de 6 colunas (Layout 2x6);
-  * **≥ 70 colunas:** Matriz de 4 colunas;
-  * **≥ 55 colunas:** Matriz de 3 colunas;
-  * **< 55 colunas:** Matriz vertical de 2 colunas para terminais estreitos.
-* **Preservação de Estado:** Ao ativar/desativar a interface, as configurações originais do usuário (`&cmdheight`, `&statusline`, `&laststatus`) são restauradas integralmente.
+## ✨ Key Features
+
+### 1. 🔍 Assisted Literal Search with Floating Popup (`assist-plugin.vim`)
+Replaces default search behavior with an intuitive lateral popup experience without compromising the original file buffer:
+* **Direct Literal Search:** Remaps `/` to perform automatic literal searches without requiring prior knowledge or manual escaping of special characters and Regular Expressions (Regex).
+* **Lateral Popup Panel:** Displays matches grouped by line in a floating window anchored to the top-right corner (`topright`), complete with custom borders and a scrollbar.
+* **In-Popup Filtering:** Press `/` directly inside the popup window to interactively filter and refine query results.
+* **Quick Jump & Viewport Centering:** Press `<Ctrl+g>` to instantly jump to the selected line in the file and center the viewport (`zz`).
+* **Graceful Fallback:** If the terminal environment or Vim build lacks popup window support (`popupwin`), matches safely degrade to standard editor status messages.
 
 ---
 
-## ⌨️ Tabela de Comandos e Atalhos
+### 2. 🧭 StatusLine & Adaptive Visual Key Guide (`assist-plugin_StatusLine.vim`)
+Inspired by the ergonomic usability of terminal-based editors such as GNU Nano:
+* **Explicit Mode Identification:** Displays the active mode clearly on the `statusline` (`[NORMAL]`, `[INSERT]`, `[VISUAL]`, `[REPLACE]`, `[COMMAND]`), preventing contextual disorientation.
+* **Essential Keys Helper:** Provides a bottom-pinned visual helper listing essential navigation, file manipulation, and help commands.
+* **Responsive Layout:** Automatically adapts column count based on terminal width (`&columns`):
+  * **≥ 90 columns:** 6-column matrix (2x6 layout);
+  * **≥ 70 columns:** 4-column matrix;
+  * **≥ 55 columns:** 3-column matrix;
+  * **< 55 columns:** 2-column vertical matrix for narrow terminal windows.
+* **State Preservation:** When toggling the UI on or off, previous user configurations (`&cmdheight`, `&statusline`, `&laststatus`) are fully restored.
 
-### Comandos de Terminal (`:` Command Mode)
-| Comando | Descrição |
+---
+
+## ⌨️ Commands and Keybindings
+
+### Terminal Commands (`:` Command Mode)
+| Command | Description |
 | :--- | :--- |
-| `:AccessibilityOn` | Ativa a interface de acessibilidade (StatusLine didática + Guia Nano de atalhos). |
-| `:AccessibilityOff` | Desativa a interface e restaura as configurações visuais anteriores do usuário. |
-| `:call ClosePopupSearch()` | Fecha manualmente o popup de busca lateral aberto. |
+| `:AccessibilityOn` | Enables the accessibility interface (educational StatusLine + Nano-style key guide). |
+| `:AccessibilityOff` | Disables the accessibility interface and restores previous editor settings. |
+| `:call ClosePopupSearch()` | Manually closes the lateral search results popup. |
 
 ---
 
-### Navegação e Busca
-| Atalho | Modo | Ação |
+### Navigation & Search Shortcuts
+| Keybinding | Mode | Action |
 | :--- | :---: | :--- |
-| `/` | Normal | Abre o prompt para busca literal de termos no buffer atual. |
-| `/` | Popup | Inicia a filtragem interna nos resultados da busca. |
-| `<Ctrl+j>` / `<Ctrl+Down>` | Popup | Rola os resultados para baixo. |
-| `<Ctrl+k>` / `<Ctrl+Up>` | Popup | Rola os resultados para cima. |
-| `<Ctrl+g>` | Popup | Pula diretamente para a linha selecionada no arquivo e centraliza a tela. |
-| `<Esc>` ou `q` | Popup | Fecha o popup de busca e limpa o destaque de grifo. |
+| `/` | Normal | Opens the prompt for buffer-wide literal search. |
+| `/` | Popup | Starts internal filtering within existing search results. |
+| `<Ctrl+j>` / `<Ctrl+Down>` | Popup | Scrolls popup results downward. |
+| `<Ctrl+k>` / `<Ctrl+Up>` | Popup | Scrolls popup results upward. |
+| `<Ctrl+g>` | Popup | Jumps directly to the selected line in the file and centers the view. |
+| `<Esc>` or `q` | Popup | Closes the search popup and clears highlights. |
 
 ---
 
-## 📁 Estrutura de Diretórios
+## 📁 Directory Structure
 
 ```plaintext
 ├── autoload/
-│   ├── assist-plugin.vim              # Lógica de busca literal, popups laterais e navegação
-│   └── assist-plugin_StatusLine.vim   # StatusLine didática, guia de teclas adaptativo e comandos UI
-└── README.md                          # Documentação do repositório
+│   ├── assist-plugin.vim              # Literal search logic, lateral popups, and navigation
+│   └── assist-plugin_StatusLine.vim   # Accessible StatusLine, adaptive key guide, and UI commands
+└── README.md                          # Project documentation
