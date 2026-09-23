@@ -87,7 +87,9 @@ function! s:UpdatePopupSearchField() abort
                 \ ] + s:popup_search_message)
 
     " Mantém o cursor visual no campo de pesquisa.
-    call win_execute(s:search_popup_id, 'cursor(1, ' .
+    " win_execute() roda a string como um comando Ex, não como expressão —
+    " por isso precisa do "call" explícito antes de cursor(...).
+    call win_execute(s:search_popup_id, 'call cursor(1, ' .
                 \ (strlen(l:search_field) + 1) . ')')
 endfunction
 
@@ -120,7 +122,7 @@ function! s:ExecutePopupSearch() abort
                 \ ] + l:filtered)
 
     " Posiciona o cursor no campo de pesquisa.
-    call win_execute(s:search_popup_id, 'cursor(1, ' .
+    call win_execute(s:search_popup_id, 'call cursor(1, ' .
                 \ (strlen(' Search: ') + strlen(s:popup_search_query) + 1) . ')')
 endfunction
 
@@ -255,9 +257,14 @@ function! s:BuildSearchMessage(word, found_lines) abort
     endif
 
     " Adiciona uma linha para cada ocorrência encontrada no buffer atual.
+    " Incluímos o texto da linha (não só o número) porque a pesquisa
+    " interna do popup (SearchInsidePopup) filtra exatamente estas
+    " strings — sem o conteúdo aqui, ela nunca teria uma palavra real
+    " pra comparar, só números de linha.
     call add(l:message, ' Found in lines:')
     for l:line_number in a:found_lines
-        call add(l:message, printf('   Line %d', l:line_number))
+        call add(l:message,
+                    \ printf('   Line %d: %s', l:line_number, getline(l:line_number)))
     endfor
 
     return l:message
@@ -310,6 +317,15 @@ function! s:BuildSearchPopupOptions() abort
 
     " Liga o filtro que permite fechar por Esc ou q e navegar com j/k/Setas.
     let l:options.filter = function('s:SearchPopupFilter')
+
+    " Por padrão (mapping = v:true), o Vim resolve cada tecla digitada como
+    " mapeamento/comando normal ANTES de oferecê-la ao filtro — e só chega
+    " ao filtro o que sobra, ou seja, teclas sem nenhum comando associado.
+    " É por isso que "/" (busca nativa) e Enter (mover uma linha) nunca
+    " chegavam ao filtro: o Vim já tinha "resolvido" as duas por conta
+    " própria. Com mapping = v:false, toda tecla vai direto pro filtro,
+    " sem passar pela resolução de comandos do Vim.
+    let l:options.mapping = v:false
 
     return l:options
 endfunction
