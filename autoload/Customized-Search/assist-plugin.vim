@@ -74,7 +74,7 @@ function! s:UpdatePopupSearchField() abort
     endif
 
     " O texto explica ao usuário o propósito do campo.
-    let l:search_field = ' Search: inserir palavra'
+    let l:search_field = ' Search: press / to type'
 
     if s:popup_search_mode
         let l:search_field = ' Search: ' . s:popup_search_query
@@ -357,7 +357,7 @@ function! s:ShowSearchMessage(word, message) abort
 
         " Adiciona o campo de pesquisa na parte superior do popup.
         let l:popup_message = [
-                    \ ' Search: inserir palavra',
+                    \ ' Search: type / to search',
                     \ '',
                     \ ] + a:message
 
