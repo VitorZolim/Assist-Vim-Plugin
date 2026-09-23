@@ -168,5 +168,5 @@ endfunction
 " ==============================================================================
 " Comandos para o Usuário
 " ==============================================================================
-command! AccessibilityOn call s:EnableAccessibilityUI()
-command! AccessibilityOff call s:DisableAccessibilityUI()
+command! AssistStatusLineOn call s:EnableAccessibilityUI()
+command! AssistStatusLineOff call s:DisableAccessibilityUI()
