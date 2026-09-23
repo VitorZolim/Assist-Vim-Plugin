@@ -1,3 +1,4 @@
+[🇺🇸 Read this documentation in English (README.md)](./README.md)
 # ♿ Vim Accessibility Plugin (assist-plugin)
 
 > **Projeto Integrador II (PI-II) — Open4Community**  
