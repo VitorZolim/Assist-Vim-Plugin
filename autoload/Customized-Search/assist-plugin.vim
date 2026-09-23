@@ -184,6 +184,11 @@ function! s:SearchPopupFilter(popup_id, key) abort
     endif
 
     " Pressionar / dentro do popup inicia a pesquisa interna.
+    " Na prática, o "/" quase nunca chega até aqui: o nnoremap global de "/"
+    " tem prioridade sobre o filtro do popup, então quem trata esse caso de
+    " verdade é o próprio CustomizedSearch() (veja o comentário lá).
+    " Mantemos a checagem aqui como reforço, caso o filtro chegue a receber
+    " a tecla em algum cenário (ex.: se o mapeamento global for removido).
     if a:key ==# '/'
         call SearchInsidePopup()
         return 1
@@ -356,6 +361,16 @@ endfunction
 
 " Lê o termo digitado, procura-o no buffer atual e mostra o resultado.
 function! CustomizedSearch() abort
+    " O "/" é global (nnoremap), então ele chega aqui mesmo com o popup de
+    " resultados já aberto — o filtro do popup nunca chega a ver essa tecla,
+    " porque o mapeamento tem prioridade. Por isso, se já existe um popup
+    " aberto, redirecionamos para a busca interna dele em vez de abrir uma
+    " nova busca no arquivo.
+    if s:search_popup_id > 0
+        call SearchInsidePopup()
+        return
+    endif
+
     " input() retorna texto vazio tanto ao pressionar Esc como ao enviar vazio.
     let l:word = input('/')
 
