@@ -1,3 +1,4 @@
+[🇧🇷 Leia esta documentação em Português (LEIAME.md)](./LEIAME.md)
 # ♿ Vim Accessibility Plugin (assist-plugin)
 
 > **Integrative Project II (PI-II) — Open4Community**  
