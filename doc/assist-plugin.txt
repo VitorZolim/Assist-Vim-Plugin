@@ -1,0 +1,53 @@
+*Assist-Plugin*   Busca interativa e statusline amigável para iniciantes
+
+==============================================================================
+ÍNDICE                                                 *Assist-Plugin-indice*
+
+1. Introdução ....................................... |Assist-Plugin-intro|
+2. Mapping .......................................... |Assist-Plugin-atalhos|
+3. Comandos ......................................... |Assist-Plugin-comandos|
+4. Configurações Globais ............................ |Assist-Plugin-config|
+
+==============================================================================
+1. Introdução                                          *Assist-Plugin-intro*
+
+O Assist-Plugin tem o papel de trazer uma visualização mais acolhedora para usuários 
+não familiarizados com sua interface padrão, trazendo aspectos na linha da status do nano e 
+um processo de pesquisa com melhor visibilidade dos resultados, além de fornecer a 
+opção de utilizar atalhos de teclado mais comumente utilizados, fornecendo um conforto e 
+facilidade de visualização melhores para iniciantes.
+
+==============================================================================
+2. Mapping (Prefixo de Comandos)		*Assist-Plugin-atalhos*
+
+Este plugin utiliza uma Palavra-Mestre como prefixo dos seus comandos. Por padrão, 
+utilizamos assist para acessar as funções do plugin.
+assist Abre o menu com os comandos disponíveis do plugin.
+A partir dele, você pode acessar todas as funcionalidades oferecidas pelo plugin
+
+==============================================================================
+3. Comandos                                            *Assist-Plugin-comandos*
+
+O plugin é dividido em três principais módulos, sendo estes "CustomizedSearch", "StatusLine" e 
+"Shortcut" tendo como sintaxe para ativação os comandos abaixo, tendo o módulo "Shortcut" a peculiaridade 
+de ser ativo juntamente com o pluguin e ser desativado somente quando o pluguin é desativado
+
+3.1 CustomizedSearch .............................. *assist-comandos-busca*
+
+ :call CustomizedSearch()
+    Abre a janela flutuante para pesquisa de palavras no arquivo atual.
+
+3.2 Statusline .................................... *assist-comandos-status*
+
+:AssistStatusLineOn
+    Ativa a exibição da linha de status do pluguin.
+
+:AssistStatusLineOff
+    Desativa a exibição da linha de status do pluguin.
+
+3.3 Startpluguin .................................... *assist-comandos-atalhos*
+
+
+==============================================================================
+4. Configurações Globais                               *Assist-Plugin-config*
+
