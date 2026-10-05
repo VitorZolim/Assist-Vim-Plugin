@@ -1,0 +1,201 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Testes Assist-Vim-Plugin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: coluna única de leitura; tabela larga rola dentro do próprio container; barra inferior imita a statusline do Vim */
+:root{
+  --bg:#f6f8f6; --surface:#ffffff; --fg:#17201b; --muted:#5b6a61; --line:#dde4df;
+  --accent:#1d6b45; --accent-soft:#e3f0e8; --code-bg:#eef2ef;
+  --ok:#1f8a4c; --ok-bg:#e2f4e8; --fail:#c0392b; --fail-bg:#fbe6e3; --wait:#9a6b00; --wait-bg:#fbf1d9;
+  --bar-bg:#17201b; --bar-fg:#e8efe9;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111613; --surface:#18201b; --fg:#e4ebe6; --muted:#97a69c; --line:#2a352e;
+  --accent:#5cc28c; --accent-soft:#1d3127; --code-bg:#212b25;
+  --ok:#5cc28c; --ok-bg:#1b3326; --fail:#f07d6f; --fail-bg:#3a1f1c; --wait:#e2b54a; --wait-bg:#352c16;
+  --bar-bg:#0a0d0b; --bar-fg:#cfd9d2; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111613; --surface:#18201b; --fg:#e4ebe6; --muted:#97a69c; --line:#2a352e;
+  --accent:#5cc28c; --accent-soft:#1d3127; --code-bg:#212b25;
+  --ok:#5cc28c; --ok-bg:#1b3326; --fail:#f07d6f; --fail-bg:#3a1f1c; --wait:#e2b54a; --wait-bg:#352c16;
+  --bar-bg:#0a0d0b; --bar-fg:#cfd9d2; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55;padding:0 16px}
+.wrap{max-width:1280px;margin:0 auto;padding-block:36px 90px;display:grid;gap:36px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--code-bg);padding:1px 5px;border-radius:4px;white-space:nowrap}
+h1{font-size:clamp(1.6rem,3.2vw,2.2rem);line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:1.15rem;margin:0 0 12px;text-wrap:balance}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+.lede{color:var(--muted);max-width:68ch;margin:10px 0 0}
+a{color:var(--accent)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+.branches td:first-child{white-space:nowrap}
+.tag{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+.summary{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:.85rem;font-weight:600;font-variant-numeric:tabular-nums}
+.p-wait{background:var(--wait-bg);color:var(--wait)} .p-ok{background:var(--ok-bg);color:var(--ok)} .p-fail{background:var(--fail-bg);color:var(--fail)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.chip{font:inherit;font-size:.82rem;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.chip:focus-visible,.status:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tests{min-width:1100px}
+.tests td.num{font-family:var(--f-mono);font-weight:600;white-space:nowrap}
+.tests td.num small{display:block;font-weight:400;color:var(--muted);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase}
+.tests tr.row-ok td.num{box-shadow:inset 3px 0 var(--ok)} .tests tr.row-fail td.num{box-shadow:inset 3px 0 var(--fail)} .tests tr.row-wait td.num{box-shadow:inset 3px 0 var(--wait)}
+.status{font-size:1.15rem;line-height:1;border:1px solid var(--line);background:var(--surface);border-radius:8px;width:40px;height:36px;cursor:pointer}
+ol.steps{margin:0;padding-left:18px} ol.steps li{margin:0 0 3px}
+.suspect{display:inline-block;margin-top:6px;font-size:.75rem;color:var(--fail);font-weight:600}
+textarea{width:100%;min-width:150px;min-height:58px;font:inherit;font-size:.82rem;color:var(--fg);background:var(--bg);border:1px dashed var(--line);border-radius:6px;padding:6px;resize:vertical}
+.legend{color:var(--muted);font-size:.85rem}
+.notes{display:grid;gap:10px;max-width:90ch}
+.notes li{margin-bottom:6px}
+.statusbar{position:fixed;left:0;right:0;bottom:0;background:var(--bar-bg);color:var(--bar-fg);font-family:var(--f-mono);font-size:.78rem;display:flex;gap:16px;flex-wrap:wrap;padding:6px 16px calc(6px + env(safe-area-inset-bottom,0px))}
+.statusbar .mode{background:var(--accent);color:var(--bar-bg);padding:0 8px;font-weight:600}
+.statusbar .right{margin-left:auto}
+@media (max-width:600px){.statusbar .right{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">PI-II · Open4Community · FATEC Ribeirão Preto</p>
+    <h1>Plano de testes do Assist-Vim-Plugin</h1>
+    <p class="lede">Testes da branch <code>integracao-plugin</code> antes de subir para a <code>main</code>. Repositório <a href="https://github.com/VitorZolim/Assist-Vim-Plugin" target="_blank" rel="noopener">VitorZolim/Assist-Vim-Plugin</a>, snapshot de 05/10/2026.</p>
+  </header>
+
+  <section>
+    <h2>Branches</h2>
+    <div class="scroll">
+      <table class="branches">
+        <thead><tr><th>Branch</th><th>Último commit</th><th>Conteúdo</th><th>Situação</th></tr></thead>
+        <tbody>
+          <tr><td><code>main</code></td><td class="tag">5647c18 · 30/09</td><td>Estrutura base, README/LEIAME, <code>doc/assist-plugin.txt</code>, <code>autoload/assist-plugin.vim</code> vazio</td><td>Ancestral da integração: o merge será fast-forward</td></tr>
+          <tr><td><code>integracao-plugin</code></td><td class="tag">671740a · 05/10</td><td>Junta as 3 features; o loader roda <code>runtime! autoload/**/*.vim</code></td><td>Alvo dos testes</td></tr>
+          <tr><td><code>customized-search</code></td><td class="tag">48ce7c8 · 30/09</td><td>Remapeia <code>/</code>, cria <code>:AssistSearch</code> e <code>:AssistSearchClose</code>, popup lateral com pesquisa interna</td><td>Tudo já na integração</td></tr>
+          <tr><td><code>StatusLine</code></td><td class="tag">7c76782 · 23/09</td><td><code>:AssistStatusLineOn</code> e <code>:AssistStatusLineOff</code>, guia de teclas estilo Nano que se adapta à largura</td><td>Tudo já na integração</td></tr>
+          <tr><td><code>shortcut</code></td><td class="tag">daad043 · 23/09</td><td><code>shortcut#Enable()</code> e <code>shortcut#Disable()</code> (setas + <code>mswin.vim</code>)</td><td>Tudo já na integração</td></tr>
+          <tr><td><code>document</code></td><td class="tag">2dcce80 · 24/08</td><td>Estrutura inicial</td><td>Já contida na <code>main</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Cenários de teste</h2>
+    <p class="legend"><strong>Pré-condição geral (PG):</strong> Vim 9.1 com <code>+popupwin</code>, plugin instalado a partir da <code>integracao-plugin</code> e um arquivo de ~30 linhas com "teste" em linhas conhecidas.<br>
+    Clique no status para alternar entre ⏳ aguardando teste, ✅ testado e passou e ❌ teste falhou. Status e evidências ficam salvos só neste navegador.</p>
+    <div class="summary" id="summary"></div>
+    <div class="controls" id="filters" role="group" aria-label="Filtrar por módulo"></div>
+    <div class="scroll">
+      <table class="tests">
+        <thead><tr><th>Nº</th><th>Status</th><th>Cenário</th><th>Pré-condição</th><th>Passo a passo</th><th>Resultado esperado</th><th>Evidência de teste</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="notes">
+    <h2>Prováveis falhas, pela leitura do código</h2>
+    <p class="legend">Ainda não foram executados. Estão marcados na tabela como "suspeita".</p>
+    <ul>
+      <li><strong>C17:</strong> fechar pelo X não chama a função de fechamento. O grifo e o ID do popup ficam presos, e o <code>/</code> seguinte cai na pesquisa interna de um popup que já fechou.</li>
+      <li><strong>C20:</strong> o filtro do popup intercepta <code>q</code>, <code>/</code> e <code>&lt;Esc&gt;</code> em qualquer modo, inclusive no Insert.</li>
+      <li><strong>C27:</strong> cada <code>On</code> salva as configs atuais por cima das anteriores, então o <code>Off</code> restaura as configs do próprio plugin.</li>
+      <li><strong>C30:</strong> nada chama <code>shortcut#Enable()</code> automaticamente e não há comando público para os atalhos.</li>
+      <li><strong>C32:</strong> o <code>Disable</code> remove os mapeamentos, mas não desfaz as opções que o <code>mswin.vim</code> altera.</li>
+      <li><strong>C35:</strong> README e doc citam <code>:AccessibilityOn</code>, <code>:call ClosePopupSearch()</code> e <code>:call CustomizedSearch()</code>, que não existem. Os nomes reais são <code>:AssistStatusLineOn</code> e <code>:AssistSearchClose</code>, e <code>CustomizedSearch</code> é interna (<code>s:</code>).</li>
+    </ul>
+  </section>
+</div>
+
+<div class="statusbar" aria-hidden="true">
+  <span class="mode">[NORMAL]</span><span>integracao-plugin</span><span>671740a</span><span class="right" id="barcount"></span>
+</div>
+
+<script>
+const T = [
+ ["C1","Carga","Carregar o plugin sem erros","PG",["`vim arquivo.txt`","`:messages`","`:echo g:loaded_assist_plugin`","`:scriptnames`"],"Nenhum erro `E…`; variável = 1; os 3 scripts de `autoload/` (Customized-Search, StatusLine, shortcut) aparecem carregados"],
+ ["C2","Carga","Guarda contra carregamento duplo","C1 ok",["`:runtime! plugin/assist-plugin.vim`","`:messages`"],"Nada é duplicado e não há erros"],
+ ["C3","Carga","Comandos públicos registrados","C1 ok",["Digitar `:Assist` + `<Tab>`"],"Lista `AssistSearch`, `AssistSearchClose`, `AssistStatusLineOn`, `AssistStatusLineOff`"],
+ ["C4","Busca","Busca literal com resultados","PG",["No modo Normal, pressionar `/`","Digitar `teste` + Enter"],"Popup no canto superior direito (\"Search Results\") com `Query`, `Matches: N` e `Line X: …` para cada linha; palavra grifada no arquivo"],
+ ["C5","Busca","Busca sem diferenciar maiúsculas/minúsculas","Arquivo com `Teste`, `TESTE`, `teste`",["`/` → `teste` + Enter"],"As 3 ocorrências aparecem listadas e grifadas"],
+ ["C6","Busca","Caracteres especiais tratados como literais","Arquivo com `a.b*`, `axb`, `[x]`",["`/` → `a.b*` + Enter","Repetir com `[x]` e `\\`"],"Só a linha com o texto exato aparece/é grifada; nenhum erro de regex"],
+ ["C7","Busca","Busca sem resultado","PG",["`/` → `zzzinexistente` + Enter"],"`Matches: 0` e \"No matching text in this buffer.\""],
+ ["C8","Busca","Busca em buffer vazio","—",["`:enew`","`/` → `abc` + Enter"],"Popup com `Matches: 0`, sem erro"],
+ ["C9","Busca","Entrada vazia ou cancelada","PG",["`/` + Enter sem digitar","`/` + `<Esc>`"],"Nenhum popup abre e não há erros"],
+ ["C10","Busca","Rolar resultados no popup","C4 com 5+ resultados",["`Ctrl+j` / `Ctrl+Down` várias vezes","`Ctrl+k` / `Ctrl+Up`"],"O destaque desce e sobe no popup; o buffer não se move"],
+ ["C11","Busca","Ir para a linha com `Ctrl+g`","C4 aberto",["Selecionar `Line X` com `Ctrl+j` e pressionar `Ctrl+g`","Selecionar o cabeçalho (`Query`) e `Ctrl+g`"],"Passo 1: cursor vai para a linha X e a tela centraliza (`zz`). Passo 2: nada acontece, sem erro"],
+ ["C12","Busca","Pesquisa interna no popup","C4 aberto",["`/` com o popup aberto","Digitar `outro` + Enter"],"Campo mostra `Search: outro`; resultados e grifo substituídos; o campo volta a \"press / to type\""],
+ ["C13","Busca","Editar o campo de pesquisa interna","C12 passo 1",["Digitar `abcd` e `BS`","`Ctrl+u`","Digitar algo e `<Esc>`"],"`BS` apaga 1 caractere; `Ctrl+u` limpa; `<Esc>` cancela e mantém os resultados anteriores"],
+ ["C14","Busca","Pesquisa interna com termo vazio","C4 aberto",["`/` + Enter sem digitar"],"`Query: \"\"`, `Matches: 0`, grifo removido, sem erro"],
+ ["C15","Busca","`Ctrl+g` durante a digitação interna","C12 passo 1",["Digitar parte de um termo","`Ctrl+g`"],"Sai da digitação e salta para a linha selecionada"],
+ ["C16","Busca","Fechar popup pelo teclado ou comando","C4 aberto",["`q` e reabrir","`<Esc>` e reabrir","`:AssistSearchClose`"],"Nos 3 casos o popup fecha e o grifo some"],
+ ["C17","Busca","Fechar popup pelo botão X (mouse)","C4 aberto, `:set mouse=a`",["Clicar no X do popup","Pressionar `/`"],"Popup fecha, grifo some e `/` abre uma busca nova",1],
+ ["C18","Busca","Buscas consecutivas","PG",["Buscar `teste` e fechar","Buscar `outro`"],"Só 1 popup e só o grifo do termo atual"],
+ ["C19","Busca","`:AssistSearch` com popup já aberto","C4 aberto",["`:AssistSearch`"],"Entra na pesquisa interna em vez de abrir um 2º popup"],
+ ["C20","Busca","Digitar no buffer com popup aberto","C4 aberto",["`i` e digitar `quero/isso`","`<Esc>` e mover com `j`/`k`"],"Texto entra inteiro (incluindo `q` e `/`); `j`/`k` movem no buffer",1],
+ ["C21","Busca","Muitos resultados e linhas longas","100 linhas com `teste`, linhas com mais de 60 colunas",["`/` → `teste` + Enter","Rolar até o fim com `Ctrl+j`"],"Barra de rolagem aparece; os 100 resultados são acessíveis; o layout não quebra"],
+ ["C22","Busca","Busca sem suporte a popup","Vim sem `+popupwin` (ex.: `vim.tiny`)",["`/` → `teste` + Enter","`:messages`"],"Aviso \"popup windows are not available\" e resultados listados nas mensagens"],
+ ["C23","StatusLine","Ativar a StatusLine","PG",["`:AssistStatusLineOn`"],"\"Accessibility UI Enabled\"; statusline `[NORMAL] … Line: l/L | Col | % | File`; guia de teclas na base"],
+ ["C24","StatusLine","Indicador de modo","C23 ativo",["`i`","`<Esc>`, depois `v` / `V` / `Ctrl+v`","`R`","`:`"],"Mostra INSERT, VISUAL, REPLACE e COMMAND; no `:` o guia some e volta ao sair"],
+ ["C25","StatusLine","Guia se adapta à largura","C23 ativo",["Redimensionar o terminal para ≥ 90, 70–89, 55–69 e < 55 colunas"],"Guia com 2, 3, 4 e 6 linhas; `cmdheight` ajusta sem sobrepor texto"],
+ ["C26","StatusLine","Desativar restaura as configurações","`set cmdheight=1 laststatus=1 statusline=%f`",["`:AssistStatusLineOn`","`:AssistStatusLineOff`","`:set cmdheight? laststatus? statusline?`"],"\"Disabled\"; o guia fecha e os valores originais voltam"],
+ ["C27","StatusLine","Ativar 2× e desativar","Mesma de C26",["`:AssistStatusLineOn` duas vezes","`:AssistStatusLineOff`","Conferir as opções"],"Os valores originais voltam (não os do plugin); só 1 guia na tela",1],
+ ["C28","StatusLine","Desativar sem ter ativado","PG",["`:AssistStatusLineOff`"],"Sem erro; nada muda"],
+ ["C29","StatusLine","Indicador de arquivo modificado","C23 ativo",["Editar sem salvar","`:w`"],"Aparece `[+]`, que some após salvar"],
+ ["C30","Atalhos","Atalhos ativos ao iniciar o plugin","PG (a doc §3 diz que o Shortcut liga junto com o plugin)",["Abrir o Vim","Selecionar texto, `Ctrl+c` / `Ctrl+v`"],"Atalhos estilo editor funcionam sem chamada manual",1],
+ ["C31","Atalhos","Ativar atalhos manualmente","PG",["`:call shortcut#Enable()`","Testar setas (Normal/Insert), `Ctrl+c/x/v`, `Ctrl+s`, `Ctrl+z`, `Ctrl+a`"],"Todos funcionam como em editores comuns"],
+ ["C32","Atalhos","Desativar atalhos","C31 ativo",["`:call shortcut#Disable()`","`Ctrl+v` no modo Normal","`:set selectmode? keymodel? backspace?`"],"`Ctrl+v` volta a ser Visual Block; mapeamentos removidos; opções voltam ao estado anterior ao Enable",1],
+ ["C33","Integração","Busca + StatusLine juntas","C23 ativo",["`/` → `teste` + Enter","Navegar e `Ctrl+g`"],"Popup de busca e guia não se sobrepõem; navegação funciona"],
+ ["C34","Integração","Busca + atalhos juntos","C31 ativo",["Repetir C4, C10, C11 e C16"],"Mesmos resultados; `/` continua chamando `:AssistSearch`"],
+ ["C35","Docs","Comandos documentados funcionam","`:helptags ALL`",["Executar cada comando do README/LEIAME e de `:help Assist-Plugin`"],"Todos os comandos documentados existem e funcionam",1],
+ ["C36","Docs","Ajuda do Vim","`:helptags ALL`",["`:help Assist-Plugin`"],"Abre a documentação com índice navegável"],
+ ["C37","Integração","Fim de linha no Windows","gVim no Windows, clone com `core.autocrlf=true`",["Instalar e abrir o Vim","`:messages`"],"Sem erros de `^M`; `.gitattributes` mantém LF"],
+ ["C38","Integração","Subir para a `main`","Todos os cenários acima ✅",["`git checkout main`","`git merge --ff-only integracao-plugin`","Repetir C1"],"Merge sem conflitos; árvore igual à da integração; C1 passa na `main`"]
+];
+const ICON={wait:"⏳",ok:"✅",fail:"❌"}, NEXT={wait:"ok",ok:"fail",fail:"wait"}, LABEL={wait:"Aguardando teste",ok:"Testado e passou",fail:"Teste falhou"};
+const KEY="assist-vim-testes-v1";
+let state={}; try{state=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){state={}}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const fmt=s=>esc(s).replace(/`([^`]+)`/g,"<code>$1</code>");
+let filter="Todos";
+const mods=["Todos",...new Set(T.map(t=>t[1]))];
+const fEl=document.getElementById("filters");
+mods.forEach(m=>{const b=document.createElement("button");b.className="chip";b.id="f-"+m;b.textContent=m;b.setAttribute("aria-pressed",m===filter);b.onclick=()=>{filter=m;fEl.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c.textContent===m));render()};fEl.appendChild(b)});
+function st(id){return (state[id]&&state[id].s)||"wait"}
+function summary(){
+  const c={wait:0,ok:0,fail:0}; T.forEach(t=>c[st(t[0])]++);
+  document.getElementById("summary").innerHTML=`<span class="pill p-wait">⏳ ${c.wait} aguardando</span><span class="pill p-ok">✅ ${c.ok} passaram</span><span class="pill p-fail">❌ ${c.fail} falharam</span>`;
+  document.getElementById("barcount").textContent=`${c.ok+c.fail}/${T.length} testados`;
+}
+function render(){
+  const tb=document.getElementById("rows"); tb.innerHTML="";
+  T.filter(t=>filter==="Todos"||t[1]===filter).forEach(t=>{
+    const [id,mod,cen,pre,steps,exp,sus]=t, s=st(id);
+    const tr=document.createElement("tr"); tr.className="row-"+s;
+    tr.innerHTML=`<td class="num">${id}<small>${mod}</small></td>
+      <td><button class="status" id="s-${id}" title="${LABEL[s]} (clique para alterar)" aria-label="${id}: ${LABEL[s]}">${ICON[s]}</button></td>
+      <td>${fmt(cen)}${sus?'<br><span class="suspect">suspeita de falha</span>':""}</td>
+      <td>${fmt(pre)}</td>
+      <td><ol class="steps">${steps.map(x=>`<li>${fmt(x)}</li>`).join("")}</ol></td>
+      <td>${fmt(exp)}</td>
+      <td><textarea id="e-${id}" placeholder="Link do print/GIF, versão do Vim, observações"></textarea></td>`;
+    tb.appendChild(tr);
+    const ta=tr.querySelector("textarea"); ta.value=(state[id]&&state[id].e)||"";
+    ta.addEventListener("input",()=>{state[id]={...(state[id]||{}),e:ta.value};save()});
+    tr.querySelector(".status").onclick=()=>{state[id]={...(state[id]||{}),s:NEXT[s]};save();render();document.getElementById("s-"+id).focus()};
+  });
+  summary();
+}
+render();
+</script>
+
+</body></html>
