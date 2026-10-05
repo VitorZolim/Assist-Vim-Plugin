@@ -7,11 +7,11 @@ function! shortcut#Enable() abort
     set nocompatible
 
     " corrige o mapeamento das setas  
-    if &term =~ 'xterm' || &term =~ 'vt100' || &term =~ 'screen' || &term =~ 'linux'
-        set t_ku= OA
-        set t_kd= OB
-        set t_kr= OC
-        set t_kl= OD
+      if &term =~ 'xterm' || &term =~ 'vt100' || &term =~ 'screen' || &term =~ 'linux' || &term =~ 'tmux'
+        let &t_ku = "\<Esc>OA"
+        let &t_kd = "\<Esc>OB"
+        let &t_kr = "\<Esc>OC"
+        let &t_kl = "\<Esc>OD"
     endif
 
     "setas funcionando para todos os modos
