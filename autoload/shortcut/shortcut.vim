@@ -1,41 +1,61 @@
-"referencia do arquivo: [ $VIMRUNTIME/mswin.vim ] 
+" referencia do arquivo: [ $VIMRUNTIME/mswin.vim ] 
 
-"funcao de ativacao dos atalhos
-
+" funcao de ativacao dos atalhos
 function! shortcut#Enable() abort
-    "forca setas funcionarem
+    " forca setas funcionarem
     set nocompatible
 
-    " corrige o mapeamento das setas  
-      if &term =~ 'xterm' || &term =~ 'vt100' || &term =~ 'screen' || &term =~ 'linux' || &term =~ 'tmux'
+    " corrige o mapeamento das setas nas emulacoes de terminal  
+    if &term =~ 'xterm' || &term =~ 'vt100' || &term =~ 'screen' || &term =~ 'linux' || &term =~ 'tmux'
         let &t_ku = "\<Esc>OA"
         let &t_kd = "\<Esc>OB"
         let &t_kr = "\<Esc>OC"
         let &t_kl = "\<Esc>OD"
     endif
 
-    "setas funcionando para todos os modos
+    " setas funcionando para modo Normal
     nnoremap <Up> k
     nnoremap <Down> j
     nnoremap <Left> h
     nnoremap <Right> l
     
+    " setas funcionando para modo Inserção
     inoremap <Up> <C-o>k
     inoremap <Down> <C-o>j
     inoremap <Left> <C-o>h
     inoremap <Right> <C-o>l
 
-    " ativa os atalhos padrões de editores 
+    " CORREÇÃO: setas funcionando para modo Visual e Select
+    vnoremap <Up> k
+    vnoremap <Down> j
+    vnoremap <Left> h
+    vnoremap <Right> l
+
+    " Salva as configurações originais do usuário antes do mswin.vim
+    let s:save_keymodel = &keymodel
+    let s:save_selection = &selection
+    let s:save_selectmode = &selectmode
+    let s:save_backspace = &backspace
+
+    " ativa os atalhos padrões de editores do windows
     silent! source $VIMRUNTIME/mswin.vim
 
+    " CORREÇÃO: O mswin.vim ativa o 'stopsel', que faz as setas (sem shift) 
+    " saírem do modo visual. Isso remove essa limitação.
+    set keymodel-=stopsel
+
+    " ativa os atalhos padrões de editores do windows
+    silent! source $VIMRUNTIME/mswin.vim
+
+    " CORREÇÃO: O mswin.vim ativa o 'stopsel', que faz as setas (sem shift) 
+    " saírem do modo visual. Isso remove essa limitação.
+    set keymodel-=stopsel
 endfunction
 
 " funcao de desativacao dos atalhos
-
 function! shortcut#Disable() abort
     
-    " remove Setas adicionadas pelo plugin
-    
+    " remove Setas adicionadas pelo plugin (Normal, Insert e Visual)
     silent! nunmap <Up>
     silent! nunmap <Down>
     silent! nunmap <Left>
@@ -46,10 +66,12 @@ function! shortcut#Disable() abort
     silent! iunmap <Left>
     silent! iunmap <Right>
 
-
+    silent! vunmap <Up>
+    silent! vunmap <Down>
+    silent! vunmap <Left>
+    silent! vunmap <Right>
     
     " remove atalhos criados pelo mswin.vim
-    
     " ctrl-x e shift-del 
     silent! vunmap <C-X>
     silent! vunmap <S-Del>
@@ -88,7 +110,7 @@ function! shortcut#Disable() abort
     silent! nunmap <C-Y>
     silent! iunmap <C-Y>
 
-    "  alt+spaço = menu do sistema
+    "  alt+espaco = menu do sistema
     silent! nunmap <M-Space>
     silent! iunmap <M-Space>
     silent! cunmap <M-Space>
@@ -123,8 +145,35 @@ function! shortcut#Disable() abort
     silent! iunmap <C-H>
     silent! cunmap <C-H>
 
+    " CORREÇÃO: Restaura opções exatas que o usuário tinha antes
+    if exists('s:save_keymodel')
+        let &keymodel = s:save_keymodel
+    else
+        set keymodel&
+    endif
+
+    if exists('s:save_selection')
+        let &selection = s:save_selection
+    else
+        set selection&
+    endif
+
+    if exists('s:save_selectmode')
+        let &selectmode = s:save_selectmode
+    else
+        set selectmode&
+    endif
+
+    if exists('s:save_backspace')
+        let &backspace = s:save_backspace
+    else
+        set backspace&
+    endif
 endfunction
 
-"ajustes a fazer: .revisar algumas configuracoes do mswin.vim nao referentes a atalho
-"                  .testar no sistema inteiro chamada e encerramento
-                   
+
+" Define o comando para ativar os atalhos
+command! AssistShortcutsOn call shortcut#Enable()
+
+" Define o comando para desativar os atalhos
+command! AssistShortcutsOff call shortcut#Disable()
