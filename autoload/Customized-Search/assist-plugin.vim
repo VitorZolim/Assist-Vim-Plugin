@@ -18,11 +18,8 @@ let s:popup_search_query = ''
 let s:popup_search_message = []
 
 " Fecha o popup de resultado e limpa o grifo do arquivo.
-function! s:CloseSearchPopup() abort
-    " Só tenta fechar o popup se houver um ID válido.
-    if s:search_popup_id > 0 && exists('*popup_close')
-        silent! call popup_close(s:search_popup_id)
-    endif
+" Nova função de callback acionada automaticamente pelo Vim ao fechar o pop-up
+function! s:PopupClosedCallback(popup_id, result) abort
     let s:search_popup_id = 0
 
     " Remove o grifo (highlight) da palavra no arquivo principal.
@@ -37,6 +34,14 @@ function! s:CloseSearchPopup() abort
     let s:popup_search_message = []
 endfunction
 
+" A função original agora apenas pede ao Vim para fechar o pop-up.
+" A limpeza das variáveis foi movida para o callback acima.
+function! s:CloseSearchPopup() abort
+    if s:search_popup_id > 0 && exists('*popup_close')
+        silent! call popup_close(s:search_popup_id)
+    endif
+endfunction
+
 " =====================================================================
 " Comandos Públicos para o Usuário
 " =====================================================================
@@ -46,18 +51,17 @@ command! AssistSearch call s:CustomizedSearch()
 
 " Inicia a pesquisa dentro do popup atual.
 function! s:SearchInsidePopup() abort
-    " Só executa se houver um popup válido.
     if s:search_popup_id <= 0
         return
     endif
 
-    " Ativa o modo de pesquisa interna.
-    " OBS: Não capturamos mais as linhas com getbufline() aqui, 
-    " pois a variável s:popup_search_message já mantém o estado real e atualizado.
     let s:popup_search_mode = 1
     let s:popup_search_query = ''
 
-    " Atualiza o campo de pesquisa no topo do popup.
+    " CORREÇÃO: Desliga os mapeamentos temporariamente enquanto o usuário
+    " digita no campo de busca, evitando que setas insiram letras indesejadas.
+    call popup_setoptions(s:search_popup_id, {'mapping': v:false})
+
     call s:UpdatePopupSearchField()
 endfunction
 
@@ -123,49 +127,49 @@ endfunction
 
 " Processa teclas recebidas pelo popup de resultados.
 function! s:SearchPopupFilter(popup_id, key) abort
-    " Quando a pesquisa interna está ativa, as teclas são direcionadas
-    " para o campo de pesquisa em vez de executar as funções do popup.
     if s:popup_search_mode
-        " ATUALIZAÇÃO 2: Enter executa a pesquisa e SAI do modo de edição.
         if a:key ==# "\<CR>"
             call s:ExecutePopupSearch()
             let s:popup_search_mode = 0
+            
+            " CORREÇÃO: Religa mapeamentos ao confirmar a busca
+            call popup_setoptions(a:popup_id, {'mapping': v:true})
+            
             call s:UpdatePopupSearchField()
             return 1
         endif
 
-        " Esc cancela a pesquisa interna e restaura os resultados originais.
         if a:key ==# "\<Esc>"
             let s:popup_search_mode = 0
             let s:popup_search_query = ''
+            
+            " CORREÇÃO: Religa mapeamentos ao cancelar a busca
+            call popup_setoptions(a:popup_id, {'mapping': v:true})
+            
             call s:UpdatePopupSearchField()
             return 1
         endif
 
-        " Backspace remove o último caractere digitado.
         if a:key ==# "\<BS>" || a:key ==# "\<Del>"
             if !empty(s:popup_search_query)
-                let s:popup_search_query =
-                            \ strpart(
-                            \ s:popup_search_query,
-                            \ 0,
-                            \ strlen(s:popup_search_query) - 1)
-
+                let s:popup_search_query = strpart(s:popup_search_query, 0, strlen(s:popup_search_query) - 1)
                 call s:UpdatePopupSearchField()
             endif
             return 1
         endif
 
-        " Ctrl+U limpa o campo de pesquisa.
         if a:key ==# "\<C-u>"
             let s:popup_search_query = ''
             call s:UpdatePopupSearchField()
             return 1
         endif
 
-        " Ctrl+G continua funcionando mesmo durante a pesquisa.
         if a:key ==# "\<C-g>"
             let s:popup_search_mode = 0
+            
+            " CORREÇÃO: Religa mapeamentos ao saltar
+            call popup_setoptions(a:popup_id, {'mapping': v:true})
+            
             call s:UpdatePopupSearchField()
             return s:SearchPopupFilter(a:popup_id, a:key)
         endif
@@ -179,15 +183,17 @@ function! s:SearchPopupFilter(popup_id, key) abort
 
         return 1
     endif
-
-    " Pressionar / dentro do popup inicia a pesquisa interna.
+    
+" Pressionar / dentro do popup inicia a pesquisa interna.
     if a:key ==# '/'
         call s:SearchInsidePopup()
         return 1
     endif
 
-    " Esc e q fecham somente a janela de resultados, sem alterar o buffer.
-    if a:key ==# "\<Esc>" || a:key ==# 'q'
+    " Esc e q fecham a janela de resultados, mas APENAS se o Vim 
+    " estiver no modo Normal ('n'). Isso evita que o pop-up seja 
+    " fechado acidentalmente ao sair do modo de inserção ou visual.
+    if (a:key ==# "\<Esc>" || a:key ==# 'q') && mode() ==# 'n'
         call s:CloseSearchPopup()
         return 1
     endif
@@ -266,7 +272,9 @@ function! s:BuildSearchPopupOptions() abort
     let l:options.wrap = 0
     let l:options.close = 'button'
     let l:options.filter = function('s:SearchPopupFilter')
-    let l:options.mapping = v:false
+    " let l:options.mapping = v:false
+
+    let l:options.callback = function('s:PopupClosedCallback')
 
     return l:options
 endfunction
