@@ -1,10 +1,15 @@
-" referencia do arquivo: [ $VIMRUNTIME/mswin.vim ] 
+" Vim autoload script: assist#shortcut#*
+" Referência: $VIMRUNTIME/mswin.vim
+" Maintainer:  victorfg-dev
+" License:     veja o arquivo LICENSE na raiz do plugin
+"
+" Os comandos :AssistShortcutsOn/Off são definidos em plugin/assist-plugin.vim.
+
+let s:save_cpo = &cpo
+set cpo&vim
 
 " funcao de ativacao dos atalhos
-function! shortcut#Enable() abort
-    " forca setas funcionarem
-    set nocompatible
-
+function! assist#shortcut#Enable() abort
     " corrige o mapeamento das setas nas emulacoes de terminal  
     if &term =~ 'xterm' || &term =~ 'vt100' || &term =~ 'screen' || &term =~ 'linux' || &term =~ 'tmux'
         let &t_ku = "\<Esc>OA"
@@ -43,17 +48,10 @@ function! shortcut#Enable() abort
     " CORREÇÃO: O mswin.vim ativa o 'stopsel', que faz as setas (sem shift) 
     " saírem do modo visual. Isso remove essa limitação.
     set keymodel-=stopsel
-
-    " ativa os atalhos padrões de editores do windows
-    silent! source $VIMRUNTIME/mswin.vim
-
-    " CORREÇÃO: O mswin.vim ativa o 'stopsel', que faz as setas (sem shift) 
-    " saírem do modo visual. Isso remove essa limitação.
-    set keymodel-=stopsel
 endfunction
 
 " funcao de desativacao dos atalhos
-function! shortcut#Disable() abort
+function! assist#shortcut#Disable() abort
     
     " remove Setas adicionadas pelo plugin (Normal, Insert e Visual)
     silent! nunmap <Up>
@@ -172,8 +170,5 @@ function! shortcut#Disable() abort
 endfunction
 
 
-" Define o comando para ativar os atalhos
-command! AssistShortcutsOn call shortcut#Enable()
-
-" Define o comando para desativar os atalhos
-command! AssistShortcutsOff call shortcut#Disable()
+let &cpo = s:save_cpo
+unlet s:save_cpo

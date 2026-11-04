@@ -1,6 +1,12 @@
-" ==============================================================================
+" Vim autoload script: assist#statusline#*
 " Acessibility StatusLine & Nano-like Popup Helper
-" ==============================================================================
+" Maintainer:  victorfg-dev
+" License:     veja o arquivo LICENSE na raiz do plugin
+"
+" Os comandos :AssistStatusLineOn/Off são definidos em plugin/assist-plugin.vim.
+
+let s:save_cpo = &cpo
+set cpo&vim
 
 " Variáveis de controle para salvar o estado anterior e restaurar depois
 let s:old_cmdheight = &cmdheight
@@ -12,7 +18,7 @@ let s:nano_popup_id = -1
 let s:ui_active = 0
 
 " 1. Função que retorna o modo atual em inglês para a StatusLine
-function! AccessibilityGetVimMode()
+function! assist#statusline#Mode() abort
     let l:m = mode()
     if l:m ==# 'n'
         return 'NORMAL'
@@ -30,7 +36,7 @@ function! AccessibilityGetVimMode()
 endfunction
 
 " 2. Função para desenhar o Popup de Acessibilidade responsivo
-function! s:DrawNanoPopup()
+function! s:DrawNanoPopup() abort
     if !has('popupwin')
         echohl WarningMsg
         echo "Aviso: O seu Vim não suporta popup_create. Atualize para a versão 8.2+"
@@ -106,7 +112,7 @@ function! s:DrawNanoPopup()
 endfunction
 
 " 3. Comando de Ativação
-function! s:EnableAccessibilityUI()
+function! assist#statusline#Enable() abort
     " Proteção: Se já estiver ativo, não faz nada (preserva as variáveis old)
     if s:ui_active == 1
         return
@@ -119,7 +125,7 @@ function! s:EnableAccessibilityUI()
     set laststatus=2
 
     let l:stl = ''
-    let l:stl .= ' [%{AccessibilityGetVimMode()}] ' 
+    let l:stl .= ' [%{assist#statusline#Mode()}] ' 
     let l:stl .= '%='                               
     let l:stl .= 'Line: %l/%L '                     
     let l:stl .= '| Col: %c '                       
@@ -146,7 +152,7 @@ function! s:EnableAccessibilityUI()
 endfunction
 
 " 4. Comando de Desativação
-function! s:DisableAccessibilityUI()
+function! assist#statusline#Disable() abort
     " Proteção: Se já estiver desativado, não faz nada
     if s:ui_active == 0
         return
@@ -171,8 +177,5 @@ function! s:DisableAccessibilityUI()
     echo "Accessibility UI Disabled"
 endfunction
 
-" ==============================================================================
-" Comandos para o Usuário
-" ==============================================================================
-command! AssistStatusLineOn call s:EnableAccessibilityUI()
-command! AssistStatusLineOff call s:DisableAccessibilityUI()
+let &cpo = s:save_cpo
+unlet s:save_cpo
