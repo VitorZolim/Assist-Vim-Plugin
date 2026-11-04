@@ -17,7 +17,7 @@ Historicamente, o Vim é conhecido por sua curva de aprendizado íngreme e por i
 
 ## ✨ Principais Funcionalidades
 
-### 1. 🔍 Busca Literal Assistida com Janela Flutuante (`assist-plugin.vim`)
+### 1. 🔍 Busca Literal Assistida com Janela Flutuante (`autoload/assist/search.vim`)
 Substitui a busca padrão por uma experiência intuitiva em popup lateral sem interferir na integridade do arquivo original:
 * **Busca Literal Direta:** Remapeia o atalho `/` para efetuar buscas literais automáticas, sem exigir conhecimento prévio ou escape manual de caracteres especiais e Regex.
 * **Painel Lateral em Popup:** Exibe as correspondências agrupadas por linha em uma janela flutuante no canto superior direito (`topright`) com moldura visual e barra de rolagem.
@@ -27,7 +27,7 @@ Substitui a busca padrão por uma experiência intuitiva em popup lateral sem in
 
 ---
 
-### 2. 🧭 Barra de Status e Guia Visual Adaptativo (`assist-plugin_StatusLine.vim`)
+### 2. 🧭 Barra de Status e Guia Visual Adaptativo (`autoload/assist/statusline.vim`)
 Inspirado na facilidade ergonômica de editores de terminal como o GNU Nano:
 * **Identificação Explícita do Modo de Operação:** Exibe na `statusline` o modo ativo de forma clara e legível (`[NORMAL]`, `[INSERT]`, `[VISUAL]`, `[REPLACE]`, `[COMMAND]`), evitando desorientações contextuais.
 * **Guia Visual de Teclas Essenciais:** Apresenta uma régua inferior com os comandos mais utilizados para manipulação de arquivos, navegação e ajuda.
@@ -45,9 +45,13 @@ Inspirado na facilidade ergonômica de editores de terminal como o GNU Nano:
 ### Comandos de Terminal (`:` Command Mode)
 | Comando | Descrição |
 | :--- | :--- |
-| `:AccessibilityOn` | Ativa a interface de acessibilidade (StatusLine didática + Guia Nano de atalhos). |
-| `:AccessibilityOff` | Desativa a interface e restaura as configurações visuais anteriores do usuário. |
-| `:call ClosePopupSearch()` | Fecha manualmente o popup de busca lateral aberto. |
+| `:AssistOn` / `:AssistOff` | **Ativa / desativa o plugin inteiro** (busca em `/`, StatusLine, atalhos); `:AssistOff` restaura as configurações anteriores. |
+| `:AssistSearch` | Abre o prompt de busca literal e o popup de resultados (também associado a `/`). |
+| `:AssistSearchClose` | Fecha o popup lateral de resultados. |
+| `:AssistStatusLineOn` / `:AssistStatusLineOff` | Ativa / desativa a StatusLine didática + guia de teclas estilo Nano, restaurando as configurações anteriores. |
+| `:AssistShortcutsOn` / `:AssistShortcutsOff` | Ativa / desativa atalhos comuns de editores (setas, Ctrl+C/V/X/S/Z...). |
+
+`<Plug>AssistSearch` pode ser mapeado para qualquer tecla (`nmap <Leader>f <Plug>AssistSearch`). Para manter o `/` padrão do Vim, adicione `let g:assist_plugin_no_mappings = 1` ao vimrc. Veja `:help assist-plugin`.
 
 ---
 
@@ -66,7 +70,16 @@ Inspirado na facilidade ergonômica de editores de terminal como o GNU Nano:
 ## 📁 Estrutura de Diretórios
 
 ```plaintext
+├── plugin/
+│   └── assist-plugin.vim              # Comandos e mapeamento <Plug>
 ├── autoload/
-│   ├── assist-plugin.vim              # Lógica de busca literal, popups laterais e navegação
-│   └── assist-plugin_StatusLine.vim   # StatusLine didática, guia de teclas adaptativo e comandos UI
-└── README.md                          # Documentação do repositório
+│   ├── assist.vim                     # :AssistOn / :AssistOff (ativação única)
+│   └── assist/
+│       ├── search.vim                     # Lógica de busca literal, popups laterais e navegação
+│       ├── statusline.vim                 # StatusLine didática e guia de teclas adaptativo
+│       └── shortcut.vim                   # Atalhos comuns de editores (baseado no mswin.vim)
+├── doc/
+│   ├── assist-plugin.txt              # Ajuda do Vim (English)
+│   └── assist-plugin.ptx              # Ajuda do Vim (Português)
+└── LEIAME.md                          # Documentação do projeto
+```
