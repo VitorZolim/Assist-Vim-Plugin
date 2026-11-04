@@ -1,5 +1,6 @@
+*assist-plugin.txt*	Interactive Search and Beginner-Friendly Statusline
+
 Assist-Plugin
-Interactive Search and Beginner-Friendly Statusline
 
 ==============================================================================
 INDEX                                                         *Assist-Plugin-index*
@@ -7,7 +8,7 @@ INDEX                                                         *Assist-Plugin-ind
 1. Introduction ....................................... |Assist-Plugin-intro|
 2. Mapping ............................................ |Assist-Plugin-mapping|
 3. Commands ........................................... |Assist-Plugin-commands|
-4. Global Settings .................................... |Assist-Plugin-config|
+4. Settings ........................................... |Assist-Plugin-config|
 
 ==============================================================================
 1. Introduction                                               *Assist-Plugin-intro*
@@ -20,31 +21,43 @@ are designed to make navigation and interaction with the editor easier
 and more comfortable for beginners.
 
 ==============================================================================
-2. Mapping (Command Prefix)                                  *Assist-Plugin-mapping*
+2. Mapping                                                  *Assist-Plugin-mapping*
 
-The plugin uses a main command to provide access to its functionalities.
-By default, the command is `:Assist`, which opens the plugin menu and
-displays the available commands and features. From this menu, users
-can access the functionalities provided by the plugin.
+                                                          *<Plug>AssistSearch*
+<Plug>AssistSearch
+        Opens the customized search (same as |:AssistSearch|).  Map it to any
+        key you like: >
+            nmap <Leader>f <Plug>AssistSearch
+<
+`:AssistOn` maps `/` in Normal mode to <Plug>AssistSearch (and `:AssistOff`
+removes it).  This default is not created if you already mapped something to <Plug>AssistSearch, if `/`
+is already mapped, or if |g:assist_plugin_no_mappings| is set.
 
 ==============================================================================
 3. Commands                                                 *Assist-Plugin-commands*
 
-The plugin is divided into three main modules: `CustomizedSearch`,
-`StatusLine`, and `Shortcut`. Each module provides specific
-functionalities that can be enabled or disabled through its respective
-commands. The `Shortcut` module is automatically enabled when the
-plugin starts and remains active until explicitly disabled.
+To enable everything at once use `:AssistOn`; `:AssistOff` undoes it and
+restores your previous settings.  Both are safe to run twice.  Until you run
+`:AssistOn` the plugin changes nothing in Vim.
 
-3.1 Customized Search                                      *assist-commands-search*
+                                                              *:AssistOn* *:AssistOff*
+:AssistOn       Enables search (`/`), the StatusLine and the shortcuts.
+:AssistOff      Disables all of them and restores the previous settings.
 
+The plugin is divided into three main modules: `Search`, `StatusLine`, and
+`Shortcut`. Each module is controlled through its own commands.  Each can also be
+used separately.
+
+3.1 Customized Search                                      *Assist-Plugin-search*
+
+                                                              *:AssistSearch*
 The `:AssistSearch` command opens a floating window that allows users
 to search for words in the current file, displaying the results in a
 more accessible interface. Pressing `/` in Normal mode also activates
-the customized search interface. The `:AssistCloseSearch` command
+the customized search interface. The `:AssistSearchClose` command
 closes the search interface.
 
-3.2 StatusLine                                             *assist-commands-status*
+3.2 StatusLine                                             *Assist-Plugin-statusline*
 
 The StatusLine module provides a customized statusline with an
 appearance inspired by Nano. It can be controlled using the following
@@ -52,22 +65,29 @@ commands:
 - `:AssistStatusLineOn`: Enables the customized statusline.
 - `:AssistStatusLineOff`: Disables the customized statusline.
 
-3.3 Shortcut                                               *assist-commands-shortcuts*
+3.3 Shortcut                                               *Assist-Plugin-shortcuts*
 
 The Shortcut module provides commonly used keyboard shortcuts,
-making navigation and interaction easier for beginners. It is
-automatically enabled when the plugin starts and can be controlled
-using the following commands:
+making navigation and interaction easier for beginners. It is enabled
+on demand and controlled with the following commands:
 - `:AssistShortcutsOn`: Enables the customized keyboard shortcuts.
 - `:AssistShortcutsOff`: Disables the shortcuts and restores the
   previous Vim settings.
 
-The available shortcuts, their respective functions, and instructions
-on how to enable or disable them can be accessed through the `:Assist`
-menu.
+The shortcuts come from Vim's own `$VIMRUNTIME/mswin.vim`.
 
 ==============================================================================
-4. Global Settings                                          *Assist-Plugin-config*
+4. Settings                                                 *Assist-Plugin-config*
+
+                                                    *g:assist_plugin_no_mappings*
+g:assist_plugin_no_mappings
+        Set it in your vimrc to stop the plugin from mapping `/`: >
+            let g:assist_plugin_no_mappings = 1
+<
+                                                          *g:loaded_assist_plugin*
+g:loaded_assist_plugin
+        Set it to 1 in your vimrc to disable the plugin completely.
+
 
 4.1 Shortcut                                               *Assist-Plugin-config-shortcut*
 
@@ -88,19 +108,18 @@ previous Vim settings. The plugin also uses the native
 
 4.2 StatusLine                                             *Assist-Plugin-config-status*
 
-While the StatusLine module is active, the `s:DrawNanoPopup()`
-function prevents changes to the `cmdheight` option. This behavior
-helps preserve the visual layout of the interface while the customized
-statusline is enabled.
+While the StatusLine module is active, the key guide popup keeps the
+`cmdheight` option adjusted to its content (it is recalculated when the
+window is resized or `cmdheight` is changed).  The previous `cmdheight`,
+`statusline` and `laststatus` are restored by `:AssistStatusLineOff`.
 
-If this behavior needs to be disabled or modified, refer to the
-corresponding implementation in the `autoload/StatusLine` directory.
+To modify this behavior, refer to `autoload/assist/statusline.vim`.
 
 The information displayed in the statusline can also be customized.
 To modify its content or appearance, refer to the `.vim` files located
-in `autoload/StatusLine`.
+in `autoload/assist/statusline.vim`.
 
-4.3 Customized Search                                      *assist-commands-config-search*
+4.3 Customized Search                                      *Assist-Plugin-config-search*
 
 While the Customized Search functionality is active, pressing `/`
 in Normal mode opens the plugin's customized search interface instead
@@ -109,9 +128,10 @@ Normal mode, the following keys can be used to close it:
 - `q`: Closes the search popup.
 - `Esc`: Closes the search popup.
 
-The plugin also globally links the `PopupSelected` highlight group
-to the `WildMenu` highlight style. This change is not reverted when
-the search popup is closed and may affect other components that use
-the `PopupSelected` highlight group.
+The plugin links the `PopupSelected` highlight group to `WildMenu` with
+`default`, so a color scheme or vimrc definition of `PopupSelected` takes
+precedence.
 
 ==============================================================================
+
+ vim:tw=78:ts=8:ft=help:norl:

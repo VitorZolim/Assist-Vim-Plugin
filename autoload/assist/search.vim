@@ -1,12 +1,14 @@
-" Vim 9.1 - busca literal personalizada com resultados em um popup lateral.
+" Vim autoload script: assist#search#*
+" Busca literal personalizada com resultados em um popup lateral.
+" Maintainer:  victorfg-dev
+" License:     veja o arquivo LICENSE na raiz do plugin
+"
+" Os comandos e mapeamentos que usam estas funções são definidos em
+" plugin/assist-plugin.vim. Este arquivo só é lido quando uma função
+" assist#search#...() é chamada pela primeira vez (|autoload|).
 
-" Impede que este mesmo arquivo seja carregado e mapeado mais de uma vez.
-if exists('g:loaded_assist_plugin_search')
-    finish
-endif
-
-" Marca o script como carregado para a próxima tentativa de source/autoload.
-let g:loaded_assist_plugin_search = 1
+let s:save_cpo = &cpo
+set cpo&vim
 
 " Guarda o identificador do popup e do grifo; zero significa nenhum.
 let s:search_popup_id = 0
@@ -43,11 +45,11 @@ function! s:CloseSearchPopup() abort
 endfunction
 
 " =====================================================================
-" Comandos Públicos para o Usuário
+" Funções públicas (chamadas pelos comandos de plugin/assist-plugin.vim)
 " =====================================================================
-command! AssistSearchClose call s:CloseSearchPopup()
-command! AssistSearch call s:CustomizedSearch()
-
+function! assist#search#Close() abort
+    call s:CloseSearchPopup()
+endfunction
 
 " Inicia a pesquisa dentro do popup atual.
 function! s:SearchInsidePopup() abort
@@ -283,7 +285,7 @@ endfunction
 function! s:ShowSearchMessage(word, message) abort
     call s:CloseSearchPopup()
 
-    highlight! link PopupSelected WildMenu
+    highlight default link PopupSelected WildMenu
 
     if !exists('*popup_create')
         echohl WarningMsg
@@ -321,8 +323,7 @@ function! s:ShowSearchMessage(word, message) abort
 endfunction
 
 " Lê o termo digitado, procura-o no buffer atual e mostra o resultado.
-" ATUALIZAÇÃO 3: Transformada em função interna (s:) acessada por comando
-function! s:CustomizedSearch() abort
+function! assist#search#Start() abort
     if s:search_popup_id > 0
         call s:SearchInsidePopup()
         return
@@ -365,5 +366,5 @@ function! s:CustomizedSearch() abort
                 \ s:BuildSearchMessage(l:word, l:found_lines))
 endfunction
 
-" ATUALIZAÇÃO 3: Utilizando o novo comando público para o atalho
-nnoremap <silent> / :AssistSearch<CR>
+let &cpo = s:save_cpo
+unlet s:save_cpo
