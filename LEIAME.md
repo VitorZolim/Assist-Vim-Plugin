@@ -1,4 +1,5 @@
 [🇺🇸 Read this documentation in English (README.md)](./README.md)
+
 # ♿ Vim Accessibility Plugin (assist-plugin)
 
 > **Projeto Integrador II (PI-II) — Open4Community**  
@@ -19,24 +20,63 @@ Historicamente, o Vim é conhecido por sua curva de aprendizado íngreme e por i
 
 ### 1. 🔍 Busca Literal Assistida com Janela Flutuante (`autoload/assist/search.vim`)
 Substitui a busca padrão por uma experiência intuitiva em popup lateral sem interferir na integridade do arquivo original:
-* **Busca Literal Direta:** Remapeia o atalho `/` para efetuar buscas literais automáticas, sem exigir conhecimento prévio ou escape manual de caracteres especiais e Regex.
-* **Painel Lateral em Popup:** Exibe as correspondências agrupadas por linha em uma janela flutuante no canto superior direito (`topright`) com moldura visual e barra de rolagem.
-* **Filtro Interno:** Permite pressionar `/` dentro da própria janela flutuante para refinar os resultados exibidos.
-* **Salto Rápido e Centralização:** Atalho `<Ctrl+g>` pula instantaneamente para a linha destacada no popup e centraliza o cursor na tela (`zz`).
-* **Fallback Automático:** Caso o ambiente do terminal ou versão do Vim não possua suporte a popups (`popupwin`), os resultados são exibidos com segurança via mensagens do próprio editor.
+- **Busca Literal Direta:** Remapeia o atalho `/` para efetuar buscas literais automáticas, sem exigir conhecimento prévio ou escape manual de caracteres especiais e Regex.
+- **Painel Lateral em Popup:** Exibe as correspondências agrupadas por linha em uma janela flutuante no canto superior direito (`topright`) com moldura visual e barra de rolagem.
+- **Filtro Interno:** Permite pressionar `/` dentro da própria janela flutuante para refinar os resultados exibidos.
+- **Salto Rápido e Centralização:** Atalho `<Ctrl+g>` pula instantaneamente para a linha destacada no popup e centraliza o cursor na tela (`zz`).
+- **Fallback Automático:** Caso o ambiente do terminal ou versão do Vim não possua suporte a popups (`popupwin`), os resultados são exibidos com segurança via mensagens do próprio editor.
 
 ---
 
 ### 2. 🧭 Barra de Status e Guia Visual Adaptativo (`autoload/assist/statusline.vim`)
 Inspirado na facilidade ergonômica de editores de terminal como o GNU Nano:
-* **Identificação Explícita do Modo de Operação:** Exibe na `statusline` o modo ativo de forma clara e legível (`[NORMAL]`, `[INSERT]`, `[VISUAL]`, `[REPLACE]`, `[COMMAND]`), evitando desorientações contextuais.
-* **Guia Visual de Teclas Essenciais:** Apresenta uma régua inferior com os comandos mais utilizados para manipulação de arquivos, navegação e ajuda.
-* **Layout Responsivo:** A quantidade de colunas do popup adapta-se automaticamente à largura da janela (`&columns`):
+- **Identificação Explícita do Modo de Operação:** Exibe na `statusline` o modo ativo de forma clara e legível (`[NORMAL]`, `[INSERT]`, `[VISUAL]`, `[REPLACE]`, `[COMMAND]`), evitando desorientações contextuais.
+- **Guia Visual de Teclas Essenciais:** Apresenta uma régua inferior com os comandos mais utilizados para manipulação de arquivos, navegação e ajuda.
+- **Layout Responsivo:** A quantidade de colunas do popup adapta-se automaticamente à largura da janela (`&columns`):
   * **≥ 90 colunas:** Matriz de 6 colunas (Layout 2x6);
   * **≥ 70 colunas:** Matriz de 4 colunas;
   * **≥ 55 colunas:** Matriz de 3 colunas;
   * **< 55 colunas:** Matriz vertical de 2 colunas para terminais estreitos.
-* **Preservação de Estado:** Ao ativar/desativar a interface, as configurações originais do usuário (`&cmdheight`, `&statusline`, `&laststatus`) são restauradas integralmente.
+- **Preservação de Estado:** Ao ativar/desativar a interface, as configurações originais do usuário (`&cmdheight`, `&statusline`, `&laststatus`) são restauradas integralmente.
+
+---
+
+## 📦 Instalação
+
+Você pode instalar o **assist-plugin** utilizando o seu gerenciador de plugins favorito ou nativamente por meio do sistema de pacotes integrado do Vim.
+
+### Opção 1: Via Gerenciador de Plugins (`vim-plug`)
+
+1. Adicione a seguinte linha ao seu arquivo `_vimrc` (Windows) ou `.vimrc` (Linux/macOS) entre as chamadas `plug#begin()` e `plug#end()`:
+
+```vim
+call plug#begin()
+
+Plug 'VitorZolim/Assist-Vim-Plugin'
+
+call plug#end()
+```
+
+2. Abra o Vim e execute:
+```vim
+:PlugInstall
+```
+
+---
+
+### Opção 2: Instalação Manual Nativa (Vim 8+)
+
+O Vim 8.0+ suporta o carregamento nativo de plugins a partir do diretório `pack/` sem a necessidade de gerenciadores externos.
+
+**Windows (Prompt de Comando / PowerShell):**
+```powershell
+git clone https://github.com/VitorZolim/Assist-Vim-Plugin.git %USERPROFILE%\vimfiles\pack\plugins\start\assist-vim-plugin
+```
+
+**Linux / macOS / WSL:**
+```bash
+git clone https://github.com/VitorZolim/Assist-Vim-Plugin.git ~/.vim/pack/plugins/start/assist-vim-plugin
+```
 
 ---
 
@@ -75,9 +115,9 @@ Inspirado na facilidade ergonômica de editores de terminal como o GNU Nano:
 ├── autoload/
 │   ├── assist.vim                     # :AssistOn / :AssistOff (ativação única)
 │   └── assist/
-│       ├── search.vim                     # Lógica de busca literal, popups laterais e navegação
-│       ├── statusline.vim                 # StatusLine didática e guia de teclas adaptativo
-│       └── shortcut.vim                   # Atalhos comuns de editores (baseado no mswin.vim)
+│       ├── search.vim                 # Lógica de busca literal, popups laterais e navegação
+│       ├── statusline.vim             # StatusLine didática e guia de teclas adaptativo
+│       └── shortcut.vim               # Atalhos comuns de editores (baseado no mswin.vim)
 ├── doc/
 │   ├── assist-plugin.txt              # Ajuda do Vim (English)
 │   └── assist-plugin.ptx              # Ajuda do Vim (Português)
